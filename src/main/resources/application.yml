@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-spring.application.name=sprintlog-boot
-=======
 # SprintLog Boot의 기본 설정 파일
 # Spring Boot가 초기화 될 때 항상 이 파일을 읽는다.
 
@@ -31,4 +28,3 @@ sprintlog:
     enabled: true
     count: 4
 
->>>>>>> a1a0322 (JPA Users 연동)
