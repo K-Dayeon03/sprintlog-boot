@@ -1,10 +1,7 @@
 package com.sprintlog.sprintlogboot.lifecycle;
 
 import com.sprintlog.sprintlogboot.config.SprintLogProperties;
-import com.sprintlog.sprintlogboot.domain.LectureLog;
-import com.sprintlog.sprintlogboot.domain.PracticeLog;
-import com.sprintlog.sprintlogboot.domain.ReadingLog;
-import com.sprintlog.sprintlogboot.domain.Visibility;
+import com.sprintlog.sprintlogboot.domain.*;
 import com.sprintlog.sprintlogboot.repository.ActivityRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -21,6 +18,8 @@ public class DataInitializer {
 
     private final ActivityRepository repository;
     private final SprintLogProperties properties;
+    //직접 UserRepository를 빈등록 안했지만, 이미 Spring Data JPA가 이미 구현체를 빈으로 등록해둠
+    private final UserRepository userRepository;
 
     // 주입된 의존성 객체를 가지고 무언가 해야 할 로직을 작성.
     @PostConstruct
@@ -42,13 +41,19 @@ public class DataInitializer {
         repository.add(new LectureLog("Prototype vs Singleton", 45, Visibility.PRIVATE, "이강사"));
 
         log.info("[lifecycle] 샘플 데이터 적재 완료 — 총 {}개", repository.count());
+
+        if (userRepository.count() == 0) {
+            User choon = new User("김춘식", "choon@naver.com");
+            userRepository.save(choon);
+            User saved = userRepository.save(new User("홍길동","hong@gmail.com"));
+        }
+        log.info("[lifecycle] DB 사용자 수:{}uad", userRepository.count());
+    }
+        @PreDestroy
+        public void shutdown () {
+            log.info("[lifecycle] @PreDestroy — DataInitializer 가 종료 정리를 합니다.");
+            log.info("[lifecycle] 최종 활동 수: {}개, 총 학습 시간: {}분"
+                    , repository.count(), repository.getTotalMinutes());
+        }
     }
 
-    @PreDestroy
-    public void shutdown() {
-        log.info("[lifecycle] @PreDestroy — DataInitializer 가 종료 정리를 합니다.");
-        log.info("[lifecycle] 최종 활동 수: {}개, 총 학습 시간: {}분"
-                , repository.count(), repository.getTotalMinutes());
-    }
-
-}

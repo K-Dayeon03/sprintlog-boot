@@ -5,14 +5,20 @@ import jakarta.persistence.*;
 @Entity //이 클래스는 JPA가 관리, 이 클래스는 데이터베이스의 한 행 (인스턴스)에 정확하게 대응
 @Table(name = "users")
 public class User extends BaseEntity {
-
-    @Id //PK
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //숫자 자동 증가 전략 사용
-    private Integer userNo;
-
     @Column(nullable = false, length = 50)
     private String nickname;
 
     @Column(nullable = false, unique = true, length = 100)
     private String email;
+
+    //JPA가 엔터티를 만들 때 사용하는 기본 생성자. 우리가 호출하는 게 아닙니다.
+    protected User() {
+    }
+
+    //우리가 실제로 사용하는 생성자
+    public User( String nickname,String email) {
+        this.nickname = nickname;
+        this.email = email;
+
+    }
 }
