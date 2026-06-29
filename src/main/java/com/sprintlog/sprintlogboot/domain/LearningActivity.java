@@ -12,42 +12,46 @@ import java.util.Set;
 @Getter
 @Entity
 @Table(name = "activities")
-public  class LearningActivity extends  BaseEntity {
+public class LearningActivity extends BaseEntity {
 
     @Column(nullable = false)
     private String title;
+
     @Column(nullable = false)
     private int minutes;
 
-    //Enum을 DB에 어떻게 넣을지를 정의(STRING:상수를 문자열로 변환, ORDINAL: 상수의 순서 숫자로 변환
+    // Enum을 DB에 어떻게 넣을지를 정의 (STRING: 상수를 문자열로 변환, ORDINAL: 상수의 순서 숫자로 변환)
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private Visibility visibility;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false,length = 20)
+    @Column(nullable = false, length = 20)
     private ActivityCategory category;
 
     @Column(length = 50)
-    private String instructorName; //LECTURE 전용
+    private String instructorName; // LECTURE 전용
 
     private Integer completionRate; // PRACTICE 전용
 
-    @Column(length = 50)
-    private String bookTitle; //READING  전용
+    @Column(length = 200)
+    private String bookTitle; // READING 전용
 
-    //컬렉션 자료형을 별로의 테이블로 매핑. 테이블이름은 activity_tags, 활동 테이블과 조인할 수 있는 외래 키 이름은 activity_id
-    //ElementCollection: 활동 객체를 조회할때 tag의 조회 방식
-    //FetchType.EAGER: 활동 객체 조회 시 무조건 tags를 조인해서 같이 가져옴(실무에서 그렇게 선호하지 않음)
-    //FetchType.LAZY: 활동 객체 조회 시 일단 tags는 안가져옴. 내가 직접 tags를 지목하면 그때 select를 통해 가져온다.
+    @Column(length = 100)
+    private String attachmentFileName; // 첨부 파일의 파일명(UUID), 필수가 아니기 때문에 null을 허용
+
+    // 컬렉션 자료형을 별도의 테이블로 매핑. 테이블 이름은 activity_tags, 활동 테이블과 조인할 수 있는 외래 키 이름은 activity_id
+    // ElementCollection: 활동 객체를 조회할 때 tag의 조회 방식 결정
+    // FetchType.EAGER: 활동 객체 조회 시 무조건 tags를 조인해서 같이 가져옴 (그렇게 선호하지는 않음)
+    // FetchType.LAZY: 활동 객체 조회 시 일단 tags는 안가져옴(조인 안함). 내가 직접 tags를 지목하면 그때 select를 통해 가져온다.
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "activity_tags", joinColumns = @JoinColumn(name = "activity_id"))
-    @Column(name="tag", nullable = false, length = 50)
-    private  Set<String> tags = new HashSet<>();
+    @Column(name = "tag")
+    private Set<String> tags = new HashSet<>();
 
-    //JPA가 사용하는 생성자를 protected로 선언(없으면 JPA가 조회한 내용을 객체로 변환 x)
-    protected LearningActivity() {
+    // JPA가 사용하는 생성자를 protected로 선언 (없으면 JPA가 조회한 내용을 객체로 변환 x)
+    protected LearningActivity() {}
 
-    }
 
     public LearningActivity(ActivityCategory category, String title, int minutes, Visibility visibility,
                             String instructorName, Integer completionRate, String bookTitle) {
@@ -60,6 +64,12 @@ public  class LearningActivity extends  BaseEntity {
         this.instructorName = normalizeInstructorName(category, instructorName);
         this.completionRate = normalizeCompletionRate(completionRate);
         this.bookTitle = bookTitle;
+    }
+
+    // 첨부 파일명을 활동 객체에 추가한다. (평범한 setter)
+    // DB에는 파일명만, 실제 파일은 디스크에 저장
+    public void attachFile(String savedFileName) {
+        this.attachmentFileName = savedFileName;
     }
 
 
@@ -98,7 +108,6 @@ public  class LearningActivity extends  BaseEntity {
     }
 
 
-
     public void extendStudy(int additionalMinutes) {
         if (additionalMinutes <= 0) {
             throw new InvalidActivityException(
@@ -132,6 +141,7 @@ public  class LearningActivity extends  BaseEntity {
     public void hideFromPublic() {
         this.visibility = Visibility.PRIVATE;
     }
+
     // 이전 LectureLog 의 정규화 로직을 흡수: 강의인데 강사명이 비면 "강사 미정".
     private static String normalizeInstructorName(ActivityCategory category, String instructorName) {
         if (category == ActivityCategory.LECTURE && (instructorName == null || instructorName.isBlank())) {
