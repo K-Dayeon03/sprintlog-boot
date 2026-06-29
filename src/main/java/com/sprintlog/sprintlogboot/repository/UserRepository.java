@@ -1,4 +1,4 @@
-package com.sprintlog.sprintlogboot.lifecycle;
+package com.sprintlog.sprintlogboot.repository;
 
 import com.sprintlog.sprintlogboot.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
